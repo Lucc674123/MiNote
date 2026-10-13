@@ -1,0 +1,14 @@
+# 工作区元数据（不要提交到公开仓库）
+.workbuddy/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 备份文件
+*.bak

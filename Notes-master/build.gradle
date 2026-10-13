@@ -1,0 +1,5 @@
+// 顶层构建文件：只声明 AGP 版本，实际配置在 app/build.gradle
+// AGP 9.4.1 需要 Gradle 9.6.0+，最高支持 API 36.1，JDK 17+
+plugins {
+    id 'com.android.application' version '9.4.1' apply false
+}

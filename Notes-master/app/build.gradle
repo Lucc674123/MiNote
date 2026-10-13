@@ -1,0 +1,36 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'net.micode.notes'
+    compileSdk 34
+
+    // 老代码用到了 org.apache.http（Android 6.0/API 23 起已从 SDK 移除）。
+    // useLibrary 会在编译期提供这些类；该逻辑只用于早已停用的 Google Tasks 同步，
+    // 不影响便签主体功能。
+    useLibrary 'org.apache.http.legacy'
+
+    defaultConfig {
+        applicationId "net.micode.notes"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "0.1"
+    }
+
+    // 老工程是 Eclipse/ADT 结构：src / res / AndroidManifest.xml 都在工程根目录。
+    // 这里把源集指回去，从而不需要移动任何文件（最小改造）。
+    sourceSets {
+        main {
+            manifest.srcFile '../AndroidManifest.xml'
+            java.srcDirs = ['../src']
+            res.srcDirs = ['../res']
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
