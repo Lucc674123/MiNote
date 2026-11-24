@@ -10,20 +10,47 @@
         android:layout_height="fill_parent"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tv_timeline_title"
+        <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/title_bar_bg"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingLeft="14dp"
             android:paddingRight="14dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:singleLine="true"
-            android:text="@string/alert_timeline_title"
-            android:textColor="#FFEAD1AE"
-            android:textSize="@dimen/text_font_size_medium" />
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tv_timeline_title"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="@string/alert_timeline_title"
+                android:textColor="#FFFFFFFF"
+                android:textSize="@dimen/text_font_size_medium"
+                android:textStyle="bold" />
+
+            <!-- 返回按钮：本页原来只能靠系统返回键/手势退出，全面屏上没有可见入口。
+                 放在标题栏右上角，和常见的「完成 / 关闭」位置一致。 -->
+            <TextView
+                android:id="@+id/btn_timeline_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:background="@drawable/btn_done_bg"
+                android:gravity="center"
+                android:minWidth="56dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:singleLine="true"
+                android:text="@string/timeline_back"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp" />
+        </LinearLayout>
 
         <ListView
             android:id="@+id/timeline_list"
@@ -43,8 +70,12 @@
             android:gravity="center"
             android:lineSpacingExtra="8dp"
             android:padding="28dp"
+            android:shadowColor="#99000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="3"
             android:text="@string/alert_timeline_empty"
-            android:textColor="#FF6B5A4A"
+            android:textColor="#FFFFFFFF"
             android:textSize="@dimen/text_font_size_small"
             android:visibility="gone" />
     </LinearLayout>

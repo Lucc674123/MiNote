@@ -8,6 +8,11 @@
     android:paddingRight="14dp"
     android:paddingTop="18dp"
     android:paddingBottom="6dp"
+    android:shadowColor="#99000000"
+    android:shadowDx="0"
+    android:shadowDy="1"
+    android:shadowRadius="3"
     android:singleLine="true"
-    android:textColor="#FF8A6A48"
-    android:textSize="13sp" />
+    android:textColor="#FFFFFFFF"
+    android:textSize="13sp"
+    android:textStyle="bold" />

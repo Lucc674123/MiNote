@@ -141,5 +141,6 @@
 
     <!-- 编辑页「完成」按钮 -->
     <string name="note_done">完成</string>
+    <string name="timeline_back">返回</string>
 
 </resources>

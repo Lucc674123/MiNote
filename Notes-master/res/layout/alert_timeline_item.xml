@@ -15,8 +15,12 @@
         android:id="@+id/tv_alert_time"
         android:layout_width="106dp"
         android:layout_height="wrap_content"
+        android:shadowColor="#99000000"
+        android:shadowDx="0"
+        android:shadowDy="1"
+        android:shadowRadius="3"
         android:singleLine="true"
-        android:textColor="#FF7B5B3B"
+        android:textColor="#FFFFFFFF"
         android:textSize="13sp" />
 
     <TextView
@@ -26,7 +30,11 @@
         android:layout_marginLeft="10dp"
         android:layout_weight="1"
         android:ellipsize="end"
+        android:shadowColor="#99000000"
+        android:shadowDx="0"
+        android:shadowDy="1"
+        android:shadowRadius="3"
         android:singleLine="true"
-        android:textColor="#FF3B2A1E"
+        android:textColor="#FFFFFFFF"
         android:textSize="15sp" />
 </LinearLayout>

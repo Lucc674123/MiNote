@@ -150,5 +150,6 @@
 
     <!-- Done button on the note edit screen -->
     <string name="note_done">Done</string>
+    <string name="timeline_back">Back</string>
 
 </resources>

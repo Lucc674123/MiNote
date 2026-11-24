@@ -45,13 +45,15 @@ public class AlertTimelineAdapter extends BaseAdapter {
 
     private static final int VIEW_TYPE_NOTE = 1;
 
-    private static final int COLOR_TIME_NORMAL = 0xFF7B5B3B;
+    // 列表背景是灰色皮革纹理，原先的深棕色文字几乎融进背景，统一改为白色；
+    // 「已过期」用略低透明度的白，保留视觉层级但不影响可读性。
+    private static final int COLOR_TIME_NORMAL = 0xFFFFFFFF;
 
-    private static final int COLOR_TIME_EXPIRED = 0xFFA08D7C;
+    private static final int COLOR_TIME_EXPIRED = 0xB3FFFFFF;
 
-    private static final int COLOR_TEXT_NORMAL = 0xFF3B2A1E;
+    private static final int COLOR_TEXT_NORMAL = 0xFFFFFFFF;
 
-    private static final int COLOR_TEXT_EXPIRED = 0xFF9C8B7B;
+    private static final int COLOR_TEXT_EXPIRED = 0xCCFFFFFF;
 
     /**
      * 时间轴上的一行。{@link #section} 为 true 时表示分区标题，其余字段无意义。

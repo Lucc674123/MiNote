@@ -74,6 +74,12 @@ public class AlertTimelineActivity extends Activity implements AdapterView.OnIte
 
         mListView = (ListView) findViewById(R.id.timeline_list);
         mEmptyView = (TextView) findViewById(R.id.tv_timeline_empty);
+        // 标题栏左侧的返回按钮：给页面一个可见的退出入口，等价于系统返回键
+        findViewById(R.id.btn_timeline_back).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                finish();
+            }
+        });
         mAdapter = new AlertTimelineAdapter(this);
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
