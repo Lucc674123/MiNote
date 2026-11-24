@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 编辑页「完成」按钮的背景：Holo Light 主色调的圆角实心块。
+     用纯色 + 圆角而不是引用图片，避免依赖已被删除的 hdpi 素材。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="#FF33B5E5" />
+    <corners android:radius="4dip" />
+
+</shape>

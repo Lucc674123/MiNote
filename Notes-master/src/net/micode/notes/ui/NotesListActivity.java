@@ -16,6 +16,7 @@
 
 package net.micode.notes.ui;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -27,8 +28,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -105,6 +108,18 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
 
     private Button mAddNewNote;
 
+    /**
+     * 首页底部栏容器：正常状态（写便签 + 定时提醒）与多选状态（取消 / 全选 / 删除）
+     * 二选一显示。多选状态由 ModeCallback 切换。
+     */
+    private View mBottomBarNormal;
+
+    private View mBottomBarSelect;
+
+    private Button mSelectAllButton;
+
+    private static final int REQUEST_CODE_POST_NOTIFICATION = 201;
+
     private boolean mDispatch;
 
     private int mOriginY;
@@ -140,11 +155,25 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.note_list);
         initResources();
+        requestNotificationPermissionIfNeeded();
 
         /**
          * Insert an introduction when user firstly use this application
          */
         setAppInfoFromRawRes();
+    }
+
+    /**
+     * Android 13（API 33）起通知需要运行时权限。没有该权限，定时提醒到点后既不会弹窗、
+     * 也不会有声音，所以首次进入列表页时申请一次。
+     */
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { Manifest.permission.POST_NOTIFICATIONS },
+                    REQUEST_CODE_POST_NOTIFICATION);
+        }
     }
 
     @Override
@@ -223,12 +252,32 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
         mAddNewNote = (Button) findViewById(R.id.btn_new_note);
         mAddNewNote.setOnClickListener(this);
         mAddNewNote.setOnTouchListener(new NewNoteOnTouchListener());
+        mBottomBarNormal = findViewById(R.id.bottom_bar_normal);
+        mBottomBarSelect = findViewById(R.id.bottom_bar_select);
+        mSelectAllButton = (Button) findViewById(R.id.btn_select_all);
+        findViewById(R.id.btn_alert_timeline).setOnClickListener(this);
+        findViewById(R.id.btn_select_cancel).setOnClickListener(this);
+        mSelectAllButton.setOnClickListener(this);
+        findViewById(R.id.btn_select_delete).setOnClickListener(this);
         mDispatch = false;
         mDispatchY = 0;
         mOriginY = 0;
         mTitleBar = (TextView) findViewById(R.id.tv_title_bar);
         mState = ListEditState.NOTE_LIST;
         mModeCallBack = new ModeCallback();
+    }
+
+    /**
+     * 切换底部栏形态：正常状态显示「写便签 + 定时提醒」，多选状态显示
+     * 「取消 / 全选 / 删除」。两套底栏叠在同一个位置，靠可见性切换。
+     */
+    private void setSelectionMode(boolean selecting) {
+        if (mBottomBarNormal != null) {
+            mBottomBarNormal.setVisibility(selecting ? View.GONE : View.VISIBLE);
+        }
+        if (mBottomBarSelect != null) {
+            mBottomBarSelect.setVisibility(selecting ? View.VISIBLE : View.GONE);
+        }
     }
 
     private class ModeCallback implements ListView.MultiChoiceModeListener, OnMenuItemClickListener {
@@ -250,7 +299,7 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
             mActionMode = mode;
             mNotesListAdapter.setChoiceMode(true);
             mNotesListView.setLongClickable(false);
-            mAddNewNote.setVisibility(View.GONE);
+            setSelectionMode(true);
 
             View customView = LayoutInflater.from(NotesListActivity.this).inflate(
                     R.layout.note_list_dropdown_menu, null);
@@ -274,15 +323,21 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
             // Update dropdown menu
             String format = getResources().getString(R.string.menu_select_title, selectedCount);
             mDropDownMenu.setTitle(format);
+            boolean allSelected = mNotesListAdapter.isAllSelected();
             MenuItem item = mDropDownMenu.findItem(R.id.action_select_all);
             if (item != null) {
-                if (mNotesListAdapter.isAllSelected()) {
+                if (allSelected) {
                     item.setChecked(true);
                     item.setTitle(R.string.menu_deselect_all);
                 } else {
                     item.setChecked(false);
                     item.setTitle(R.string.menu_select_all);
                 }
+            }
+            // 底部栏的「全选 / 取消全选」按钮与下拉菜单保持一致
+            if (mSelectAllButton != null) {
+                mSelectAllButton.setText(allSelected ? R.string.menu_deselect_all
+                        : R.string.menu_select_all);
             }
         }
 
@@ -299,11 +354,61 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
         public void onDestroyActionMode(ActionMode mode) {
             mNotesListAdapter.setChoiceMode(false);
             mNotesListView.setLongClickable(true);
-            mAddNewNote.setVisibility(View.VISIBLE);
+            mActionMode = null;
+            setSelectionMode(false);
         }
 
         public void finishActionMode() {
-            mActionMode.finish();
+            if (mActionMode != null) {
+                mActionMode.finish();
+            }
+        }
+
+        /**
+         * 多选模式是否处于激活状态。列表页的返回键据此判断：先退出多选，而不是直接
+         * 结束整个 Activity（原版在这里没有处理，导致多选模式没有「取消」出口）。
+         */
+        public boolean isActionModeActive() {
+            return mActionMode != null;
+        }
+
+        /**
+         * 多选状态下的「删除」确认框。底部栏按钮与顶部菜单共用这一段逻辑。
+         */
+        public void confirmDeleteSelected() {
+            if (mNotesListAdapter.getSelectedCount() == 0) {
+                Toast.makeText(NotesListActivity.this, getString(R.string.menu_select_none),
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(NotesListActivity.this);
+            builder.setTitle(getString(R.string.alert_title_delete));
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
+            builder.setMessage(getString(R.string.alert_message_delete_notes,
+                    mNotesListAdapter.getSelectedCount()));
+            builder.setPositiveButton(android.R.string.ok,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            batchDelete();
+                        }
+                    });
+            builder.setNegativeButton(android.R.string.cancel, null);
+            builder.show();
+        }
+
+        /**
+         * 多选状态下的「取消」：结束多选，不做任何修改。
+         */
+        public void cancelSelection() {
+            finishActionMode();
+        }
+
+        /**
+         * 多选状态下的「全选 / 取消全选」。
+         */
+        public void toggleSelectAll() {
+            mNotesListAdapter.selectAll(!mNotesListAdapter.isAllSelected());
+            updateMenu();
         }
 
         public void onItemCheckedStateChanged(ActionMode mode, int position, long id,
@@ -322,20 +427,7 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
             // AGP 8+ 起 R.id 不再是编译期常量，无法用作 switch 的 case 标签，故改用 if-else。
             final int itemId = item.getItemId();
             if (itemId == R.id.delete) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(NotesListActivity.this);
-                builder.setTitle(getString(R.string.alert_title_delete));
-                builder.setIcon(android.R.drawable.ic_dialog_alert);
-                builder.setMessage(getString(R.string.alert_message_delete_notes,
-                                         mNotesListAdapter.getSelectedCount()));
-                builder.setPositiveButton(android.R.string.ok,
-                                         new DialogInterface.OnClickListener() {
-                                             public void onClick(DialogInterface dialog,
-                                                     int which) {
-                                                 batchDelete();
-                                             }
-                                         });
-                builder.setNegativeButton(android.R.string.cancel, null);
-                builder.show();
+                confirmDeleteSelected();
             } else if (itemId == R.id.move) {
                 startQueryDestinationFolders();
             } else {
@@ -557,9 +649,22 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
     }
 
     public void onClick(View v) {
-        if (v.getId() == R.id.btn_new_note) {
+        final int viewId = v.getId();
+        if (viewId == R.id.btn_new_note) {
             createNewNote();
+        } else if (viewId == R.id.btn_alert_timeline) {
+            openAlertTimeline();
+        } else if (viewId == R.id.btn_select_cancel) {
+            mModeCallBack.cancelSelection();
+        } else if (viewId == R.id.btn_select_all) {
+            mModeCallBack.toggleSelectAll();
+        } else if (viewId == R.id.btn_select_delete) {
+            mModeCallBack.confirmDeleteSelected();
         }
+    }
+
+    private void openAlertTimeline() {
+        startActivity(new Intent(this, AlertTimelineActivity.class));
     }
 
     private void showSoftInput() {
@@ -661,6 +766,12 @@ public class NotesListActivity extends Activity implements OnClickListener, OnIt
 
     @Override
     public void onBackPressed() {
+        // 多选模式下，返回键应当先退出多选（等价于底部栏的「取消」），
+        // 而不是直接结束列表页。原版没有这段判断，多选模式因此缺少显式的退出路径。
+        if (mModeCallBack != null && mModeCallBack.isActionModeActive()) {
+            mModeCallBack.cancelSelection();
+            return;
+        }
         switch (mState) {
             case SUB_FOLDER:
                 mCurrentFolderId = Notes.ID_ROOT_FOLDER;

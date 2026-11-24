@@ -16,16 +16,14 @@
 
 package net.micode.notes.ui;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 
 import net.micode.notes.data.Notes;
 import net.micode.notes.data.Notes.NoteColumns;
+import net.micode.notes.tool.AlarmScheduler;
 
 
 public class AlarmInitReceiver extends BroadcastReceiver {
@@ -50,13 +48,11 @@ public class AlarmInitReceiver extends BroadcastReceiver {
         if (c != null) {
             if (c.moveToFirst()) {
                 do {
+                    // 开机后重建所有未到期的提醒。调度细节统一交给 AlarmScheduler，
+                    // 避免和老版本一样在这里手写 PendingIntent（API 31+ 会直接崩溃）。
                     long alertDate = c.getLong(COLUMN_ALERTED_DATE);
-                    Intent sender = new Intent(context, AlarmReceiver.class);
-                    sender.setData(ContentUris.withAppendedId(Notes.CONTENT_NOTE_URI, c.getLong(COLUMN_ID)));
-                    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, sender, 0);
-                    AlarmManager alermManager = (AlarmManager) context
-                            .getSystemService(Context.ALARM_SERVICE);
-                    alermManager.set(AlarmManager.RTC_WAKEUP, alertDate, pendingIntent);
+                    long noteId = c.getLong(COLUMN_ID);
+                    AlarmScheduler.schedule(context, noteId, alertDate);
                 } while (c.moveToNext());
             }
             c.close();

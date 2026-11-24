@@ -76,6 +76,9 @@ public class NotesListAdapter extends CursorAdapter {
     public void setChoiceMode(boolean mode) {
         mSelectedIndex.clear();
         mChoiceMode = mode;
+        // 通知 ListView 重新绑定所有可见条目。否则退出多选时 mChoiceMode 虽已变为 false，
+        // 但已经绑定的行不会重走 bind()，勾选框会残留在界面上（原版遗留缺陷）。
+        notifyDataSetChanged();
     }
 
     public void selectAll(boolean checked) {

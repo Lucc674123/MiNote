@@ -66,4 +66,16 @@
         <item name="android:displayOptions" />
         <item name="android:visibility">gone</item>
     </style>
+
+    <!-- 多选状态底栏上的按钮：等分、无边框、象牙色文字 -->
+    <style name="BottomBarButton">
+        <item name="android:layout_width">0dip</item>
+        <item name="android:layout_height">48dip</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@null</item>
+        <item name="android:textColor">#FFEAD1AE</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:gravity">center</item>
+    </style>
 </resources>

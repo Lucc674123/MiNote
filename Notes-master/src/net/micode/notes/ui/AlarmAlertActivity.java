@@ -18,6 +18,7 @@ package net.micode.notes.ui;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -27,6 +28,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
@@ -50,6 +52,12 @@ public class AlarmAlertActivity extends Activity implements OnClickListener, OnD
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        // Android 8.1 起需要显式声明，配合通知的全屏 Intent 才能在锁屏上直接弹出提醒
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true);
+            setTurnScreenOn(true);
+        }
 
         final Window win = getWindow();
         win.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
@@ -145,6 +153,12 @@ public class AlarmAlertActivity extends Activity implements OnClickListener, OnD
 
     public void onDismiss(DialogInterface dialog) {
         stopAlarmSound();
+        // 用户已经处理过这条提醒，撤掉通知栏里的对应通知
+        NotificationManager notificationManager = (NotificationManager) getSystemService(
+                NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancel(AlarmReceiver.NOTIFICATION_ID);
+        }
         finish();
     }
 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 时间轴中的一条提醒：左侧时间，右侧便签摘要 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="62dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingLeft="14dp"
+    android:paddingRight="14dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <TextView
+        android:id="@+id/tv_alert_time"
+        android:layout_width="106dp"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textColor="#FF7B5B3B"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/tv_alert_snippet"
+        android:layout_width="0dip"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="#FF3B2A1E"
+        android:textSize="15sp" />
+</LinearLayout>

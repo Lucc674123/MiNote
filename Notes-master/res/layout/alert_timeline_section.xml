@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 时间轴的分区标题：已过期 / 即将提醒 -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tv_section_title"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="14dp"
+    android:paddingRight="14dp"
+    android:paddingTop="18dp"
+    android:paddingBottom="6dp"
+    android:singleLine="true"
+    android:textColor="#FF8A6A48"
+    android:textSize="13sp" />

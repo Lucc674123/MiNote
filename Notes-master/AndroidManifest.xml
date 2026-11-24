@@ -26,6 +26,12 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 定时提醒：Android 13+ 通知需要运行时授权，否则到点后既不弹窗也不响铃 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 精确闹钟（Android 12+ 属于特殊应用权限，未授予时自动降级为非精确闹钟） -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- 提醒到点时通过全屏 Intent 直接弹出界面的权限（Android 10+） -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <application
         android:icon="@drawable/icon_app"
@@ -37,7 +43,6 @@
             android:label="@string/app_name"
             android:launchMode="singleTop"
             android:theme="@style/NoteTheme"
-            android:uiOptions="splitActionBarWhenNarrow"
             android:windowSoftInputMode="adjustPan" >
 
             <intent-filter>
@@ -45,6 +50,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.AlertTimelineActivity"
+            android:exported="false"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/alert_timeline_title"
+            android:launchMode="singleTop"
+            android:parentActivityName=".ui.NotesListActivity"
+            android:theme="@style/NoteTheme" />
 
         <activity
             android:name=".ui.NoteEditActivity"

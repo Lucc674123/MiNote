@@ -123,4 +123,23 @@
         <item quantity="other"><xliff:g id="NUMBER">%1$s</xliff:g> 条符合“<xliff:g id="SEARCH">%2$s</xliff:g>”的搜索结果</item>
     </plurals>
 
+    <!-- 定时提醒时间轴 -->
+    <string name="alert_timeline_title">定时提醒</string>
+    <string name="alert_timeline_empty">暂无定时提醒\n在便签编辑页点击右上角菜单，选择“提醒我”即可设置提醒时间</string>
+    <string name="alert_timeline_section_upcoming">即将提醒</string>
+    <string name="alert_timeline_section_expired">已过期</string>
+    <string name="alert_timeline_no_content">（无正文内容）</string>
+    <string name="note_alert_set">设置提醒</string>
+
+    <!-- 多选状态底栏 -->
+    <string name="select_mode_cancel">取消</string>
+
+    <!-- 提醒通知 -->
+    <string name="alert_notification_channel">便签提醒</string>
+    <string name="alert_notification_channel_desc">便签到达设定时间时的提醒通知</string>
+    <string name="alert_notification_title">便签提醒</string>
+
+    <!-- 编辑页「完成」按钮 -->
+    <string name="note_done">完成</string>
+
 </resources>

@@ -132,4 +132,23 @@
         <item quantity="other"><xliff:g id="number" example="15">%1$s</xliff:g> results for \"<xliff:g id="search" example="???">%2$s</xliff:g>\"</item>
     </plurals>
 
+    <!-- Reminder timeline -->
+    <string name="alert_timeline_title">Reminders</string>
+    <string name="alert_timeline_empty">No reminders yet\nOpen a note, tap the overflow menu and choose \"Remind me\" to set a time</string>
+    <string name="alert_timeline_section_upcoming">Upcoming</string>
+    <string name="alert_timeline_section_expired">Expired</string>
+    <string name="alert_timeline_no_content">(No content)</string>
+    <string name="note_alert_set">Set reminder</string>
+
+    <!-- Selection mode bottom bar -->
+    <string name="select_mode_cancel">Cancel</string>
+
+    <!-- Reminder notification -->
+    <string name="alert_notification_channel">Note reminders</string>
+    <string name="alert_notification_channel_desc">Notifications for notes with a reminder time</string>
+    <string name="alert_notification_title">Note reminder</string>
+
+    <!-- Done button on the note edit screen -->
+    <string name="note_done">Done</string>
+
 </resources>

@@ -17,12 +17,9 @@
 package net.micode.notes.ui;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.appwidget.AppWidgetManager;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -57,6 +54,7 @@ import net.micode.notes.data.Notes;
 import net.micode.notes.data.Notes.TextNote;
 import net.micode.notes.model.WorkingNote;
 import net.micode.notes.model.WorkingNote.NoteSettingChangedListener;
+import net.micode.notes.tool.AlarmScheduler;
 import net.micode.notes.tool.DataUtils;
 import net.micode.notes.tool.ResourceParser;
 import net.micode.notes.tool.ResourceParser.TextAppearanceResources;
@@ -306,10 +304,14 @@ public class NoteEditActivity extends Activity implements OnClickListener,
             }
             mNoteHeaderHolder.tvAlertDate.setVisibility(View.VISIBLE);
             mNoteHeaderHolder.ivAlertIcon.setVisibility(View.VISIBLE);
+            mNoteHeaderHolder.ivAlertIcon.setAlpha(1f);
         } else {
-            mNoteHeaderHolder.tvAlertDate.setVisibility(View.GONE);
-            mNoteHeaderHolder.ivAlertIcon.setVisibility(View.GONE);
-        };
+            // 没有提醒时也保留入口：图标半透明，右侧显示"设置提醒"作为可点击提示
+            mNoteHeaderHolder.tvAlertDate.setText(R.string.note_alert_set);
+            mNoteHeaderHolder.tvAlertDate.setVisibility(View.VISIBLE);
+            mNoteHeaderHolder.ivAlertIcon.setVisibility(View.VISIBLE);
+            mNoteHeaderHolder.ivAlertIcon.setAlpha(0.45f);
+        }
     }
 
     @Override
@@ -369,8 +371,25 @@ public class NoteEditActivity extends Activity implements OnClickListener,
         mNoteHeaderHolder.tvModified = (TextView) findViewById(R.id.tv_modified_date);
         mNoteHeaderHolder.ivAlertIcon = (ImageView) findViewById(R.id.iv_alert_icon);
         mNoteHeaderHolder.tvAlertDate = (TextView) findViewById(R.id.tv_alert_date);
+        // 原版只能通过 ActionBar 的溢出菜单设置提醒，而本工程的主题把 ActionBar 隐藏了，
+        // 现代手机（没有菜单键）根本点不到那个菜单。这里让头部的闹钟图标和文字直接可点：
+        // 点击设置 / 修改提醒，长按取消提醒。
+        mNoteHeaderHolder.ivAlertIcon.setOnClickListener(this);
+        mNoteHeaderHolder.tvAlertDate.setOnClickListener(this);
+        mNoteHeaderHolder.tvAlertDate.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                if (mWorkingNote.hasClockAlert()) {
+                    mWorkingNote.setAlertDate(0, false);
+                    showToast(R.string.delete_remind_time_message);
+                    return true;
+                }
+                return false;
+            }
+        });
         mNoteHeaderHolder.ibSetBgColor = (ImageView) findViewById(R.id.btn_set_bg_color);
         mNoteHeaderHolder.ibSetBgColor.setOnClickListener(this);
+        // 头部左侧的「完成」按钮：原版没有可见的退出入口，只能按系统返回键
+        findViewById(R.id.btn_done).setOnClickListener(this);
         mNoteEditor = (EditText) findViewById(R.id.note_edit_view);
         mNoteEditorPanel = findViewById(R.id.sv_note_edit);
         mNoteBgColorSelector = findViewById(R.id.note_bg_color_selector);
@@ -449,7 +468,28 @@ public class NoteEditActivity extends Activity implements OnClickListener,
                         TextAppearanceResources.getTexAppearanceResource(mFontSizeId));
             }
             mFontSizeSelector.setVisibility(View.GONE);
+        } else if (id == R.id.iv_alert_icon || id == R.id.tv_alert_date) {
+            // 头部闹钟：点击设置或修改提醒时间
+            setReminder();
+        } else if (id == R.id.btn_done) {
+            // 头部「完成」：保存并返回列表
+            doneAndFinish();
         }
+    }
+
+    /**
+     * 点击「完成」时保存便签并结束当前页面。
+     * 走的保存逻辑与系统返回键（{@link #onBackPressed()}）完全一致，避免两条退出路径
+     * 行为不一致；顺带收起可能还开着的背景色 / 字体大小面板。
+     */
+    private void doneAndFinish() {
+        if (mWorkingNote == null) {
+            finish();
+            return;
+        }
+        clearSettingState();
+        saveNote();
+        finish();
     }
 
     @Override
@@ -545,7 +585,13 @@ public class NoteEditActivity extends Activity implements OnClickListener,
     }
 
     private void setReminder() {
-        DateTimePickerDialog d = new DateTimePickerDialog(this, System.currentTimeMillis());
+        // 已有未到期的提醒时，从那个时间开始调，方便微调而不是每次从"现在"重选
+        long now = System.currentTimeMillis();
+        long initialDate = now;
+        if (mWorkingNote.hasClockAlert() && mWorkingNote.getAlertDate() > now) {
+            initialDate = mWorkingNote.getAlertDate();
+        }
+        DateTimePickerDialog d = new DateTimePickerDialog(this, initialDate);
         d.setOnDateTimeSetListener(new OnDateTimeSetListener() {
             public void OnDateTimeSet(AlertDialog dialog, long date) {
                 mWorkingNote.setAlertDate(date	, true);
@@ -612,15 +658,14 @@ public class NoteEditActivity extends Activity implements OnClickListener,
             saveNote();
         }
         if (mWorkingNote.getNoteId() > 0) {
-            Intent intent = new Intent(this, AlarmReceiver.class);
-            intent.setData(ContentUris.withAppendedId(Notes.CONTENT_NOTE_URI, mWorkingNote.getNoteId()));
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-            AlarmManager alarmManager = ((AlarmManager) getSystemService(ALARM_SERVICE));
+            // 统一走 AlarmScheduler：Android 12+ 的 PendingIntent 必须带 FLAG_IMMUTABLE，
+            // 原版这里直接传 0 会在设置提醒时抛 IllegalArgumentException。
+            long noteId = mWorkingNote.getNoteId();
             showAlertHeader();
-            if(!set) {
-                alarmManager.cancel(pendingIntent);
+            if (!set) {
+                AlarmScheduler.cancel(this, noteId);
             } else {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, date, pendingIntent);
+                AlarmScheduler.schedule(this, noteId, date);
             }
         } else {
             /**
